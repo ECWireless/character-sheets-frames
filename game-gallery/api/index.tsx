@@ -5,8 +5,8 @@ import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
 import { gnosis } from 'viem/chains';
 
-import { Background, Heading, Paragraph } from '../components/index.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
+import { colors } from '../utils/theme.js';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -104,3 +104,71 @@ devtools(app, isProduction ? { assetsPath: '/.frog' } : { serveStatic });
 
 export const GET = handle(app);
 export const POST = handle(app);
+
+/*
+COMPONENTS
+*/
+
+export const Background = ({
+  children,
+}: {
+  children: JSX.Element | JSX.Element[];
+}): JSX.Element => (
+  <div
+    style={{
+      alignItems: 'center',
+      background: colors.dark,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      justifyContent: 'center',
+      padding: '32px',
+      textAlign: 'center',
+      width: '100%',
+    }}
+  >
+    <div
+      style={{
+        alignItems: 'center',
+        background: colors.cardBG,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        justifyContent: 'center',
+        textAlign: 'center',
+        width: '100%',
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+export const Heading = ({ children }: { children: string }): JSX.Element => (
+  <div
+    style={{
+      color: 'white',
+      fontSize: 54,
+      letterSpacing: '-0.025em',
+      lineHeight: 1.4,
+      display: 'flex',
+    }}
+  >
+    {children}
+  </div>
+);
+
+export const Paragraph = ({ children }: { children: string }): JSX.Element => (
+  <div
+    style={{
+      color: 'white',
+      fontSize: 32,
+      fontStyle: 'normal',
+      letterSpacing: '-0.025em',
+      lineHeight: 1.4,
+      display: 'flex',
+    }}
+  >
+    {children}
+  </div>
+);
