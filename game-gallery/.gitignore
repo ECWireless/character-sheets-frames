@@ -16,3 +16,6 @@
 
 # typescript
 *.tsbuildinfo
+
+# graphql autogen types
+graphql/autogen/types.ts

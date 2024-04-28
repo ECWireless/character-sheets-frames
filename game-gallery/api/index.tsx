@@ -1,90 +1,11 @@
-import axios from 'axios';
 import { Button, Frog, TextInput } from 'frog';
 import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 // import { neynar } from 'frog/hubs'
 import { handle } from 'frog/vercel';
+import { gnosis } from 'viem/chains';
 
-import { SUBGRAPH_URL } from '../utils/constants.js';
-import { uriToHttp } from '../utils/helpers.js';
-import { GameMeta, Metadata } from '../utils/types.js';
-
-export type GameMetaInfoFragment = {
-  __typename?: 'Game';
-  id: string;
-  startedAt: unknown;
-  chainId: unknown;
-  uri: string;
-  experience: string;
-  owner: { __typename?: 'GameOwner'; address: string };
-  admins: Array<{ __typename?: 'GameAdmin'; address: string }>;
-  masters: Array<{ __typename?: 'GameMaster'; address: string }>;
-  characters: Array<{ __typename?: 'Character'; id: string; player: string }>;
-  classes: Array<{ __typename?: 'Class'; id: string }>;
-  items: Array<{ __typename?: 'Item'; id: string }>;
-};
-
-const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
-  const res = await fetch(uri);
-  if (!res.ok) throw new Error('Failed to fetch');
-  const metadata = await res.json();
-  metadata.name = metadata.name || '';
-  metadata.description = metadata.description || '';
-  metadata.image = metadata.image || '';
-  metadata.equippable_layer = metadata.equippable_layer || null;
-  metadata.attributes = metadata.attributes || [];
-  return metadata;
-};
-
-const fetchMetadata = async (ipfsUri: string): Promise<Metadata> => {
-  try {
-    const uris = uriToHttp(ipfsUri);
-    for (const u of uris) {
-      try {
-        const metadata = await fetchMetadataFromUri(u);
-        return metadata;
-      } catch (e) {
-        console.error('Failed to fetch metadata from', u);
-        continue;
-      }
-    }
-  } catch (e) {
-    console.error('Failed to fetch metadata from', ipfsUri);
-  }
-  return {
-    name: '',
-    description: '',
-    image: '',
-    equippable_layer: null,
-    attributes: [],
-  };
-};
-
-export const formatGameMeta = async (
-  game: GameMetaInfoFragment,
-): Promise<GameMeta> => {
-  const metadata = await fetchMetadata(game.uri);
-
-  return {
-    id: game.id,
-    startedAt: Number(game.startedAt) * 1000,
-    chainId: Number(game.chainId),
-    uri: game.uri,
-    owner: game.owner.address,
-    admins: game.admins.map(a => a.address),
-    masters: game.masters.map(m => m.address),
-    players: game.characters.map(c => c.player),
-    name: metadata.name,
-    description: metadata.description,
-    image: uriToHttp(metadata.image)[0],
-    characters: game.characters,
-    classes: game.classes,
-    items: game.items,
-    experience: game.experience,
-    equippable_layer: null,
-    attributes: metadata.attributes,
-  };
-};
+import { getGameMetaForChainId } from '../graphql/games.js';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -175,57 +96,7 @@ app.frame('/', c => {
 
 app.frame('/game', async c => {
   const gameId = c.inputText ?? '';
-
-  let game = null;
-
-  try {
-    const query = `
-      query {
-        game(id: "${gameId.toLowerCase()}") {
-          id
-          startedAt
-          chainId
-          uri
-          owner {
-            address
-          }
-          admins {
-            address
-          }
-          masters {
-            address
-          }
-          experience
-          characters {
-            id
-            player
-          }
-          classes {
-            id
-          }
-          items {
-            id
-          }
-        }
-      }
-    `;
-
-    const response = await axios({
-      url: SUBGRAPH_URL,
-      method: 'post',
-      data: {
-        query,
-      },
-    });
-
-    if (response.data.errors) {
-      throw new Error(JSON.stringify(response.data.errors));
-    }
-
-    game = await formatGameMeta(response.data.data.game);
-  } catch (error) {
-    console.error('Error fetching game data', error);
-  }
+  const game = await getGameMetaForChainId(gnosis.id, gameId);
 
   if (!game) {
     return c.res({

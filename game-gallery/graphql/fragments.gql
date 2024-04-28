@@ -1,0 +1,26 @@
+fragment GameMetaInfo on Game {
+  id
+  startedAt
+  chainId
+  uri
+  owner {
+    address
+  }
+  admins {
+    address
+  }
+  masters {
+    address
+  }
+  experience
+  characters {
+    id
+    player
+  }
+  classes {
+    id
+  }
+  items {
+    id
+  }
+}

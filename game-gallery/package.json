@@ -5,16 +5,26 @@
   "scripts": {
     "build": "frog vercel-build",
     "dev": "frog dev",
-    "deploy": "vercel"
+    "deploy": "vercel",
+    "generate": "graphql-codegen --config=codegen.yml",
+    "prepare": "yarn generate"
   },
   "dependencies": {
-    "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "frog": "latest",
-    "hono": "^4"
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
+    "hono": "^4",
+    "urql": "^4.0.7",
+    "viem": "^2.9.28"
   },
   "devDependencies": {
     "@eslint/js": "^9.1.1",
+    "@graphql-codegen/add": "^5.0.2",
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/typescript": "^4.0.4",
+    "@graphql-codegen/typescript-operations": "^4.1.2",
+    "@graphql-codegen/typescript-urql": "^4.0.0",
     "eslint": "^9.1.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
