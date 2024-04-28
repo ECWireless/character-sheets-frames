@@ -5,6 +5,7 @@ import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
 import { gnosis } from 'viem/chains';
 
+import { Background, Heading, Paragraph } from '../components/index.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
 
 // Uncomment to use Edge Runtime.
@@ -19,73 +20,16 @@ export const app = new Frog({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
 });
 
-const defaultContainer = (children: JSX.Element) => (
-  <div
-    style={{
-      alignItems: 'center',
-      background: 'black',
-      backgroundSize: '100% 100%',
-      display: 'flex',
-      flexDirection: 'column',
-      flexWrap: 'nowrap',
-      height: '100%',
-      justifyContent: 'center',
-      textAlign: 'center',
-      width: '100%',
-    }}
-  >
-    {children}
-  </div>
-);
-
 app.frame('/', c => {
   return c.res({
     title: 'Game Gallery',
-    image: defaultContainer(
-      <div
-        style={{
-          alignItems: 'center',
-          border: '6px solid #ff3864',
-          justifyContent: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '60%',
-          width: '90%',
-        }}
-      >
-        <div
-          style={{
-            color: 'white',
-            fontSize: 48,
-            fontStyle: 'normal',
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            padding: '0 120px',
-            whiteSpace: 'pre-wrap',
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
-          }}
-        >
-          Welcome to the CharacterSheets!
-        </div>
-        <div
-          style={{
-            color: 'white',
-            fontSize: 32,
-            fontStyle: 'normal',
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            padding: '0 120px',
-            whiteSpace: 'pre-wrap',
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
-          }}
-        >
+    image: (
+      <Background>
+        <Heading>Welcome to the CharacterSheets!</Heading>
+        <Paragraph>
           Enter a game ID or address to view game on Gnosis chain.
-        </div>
-      </div>,
+        </Paragraph>
+      </Background>
     ),
     intents: [
       <TextInput placeholder="Game ID/address..." />,
@@ -94,40 +38,30 @@ app.frame('/', c => {
   });
 });
 
-app.frame('/game', async c => {
-  const gameId = c.inputText ?? '';
+app.frame('/game/:gameId?', async c => {
+  const gameId = c.req.param('gameId') ?? c.inputText ?? '';
+
+  if (!gameId) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Heading>No game ID/address provided.</Heading>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
   const game = await getGameMetaForChainId(gnosis.id, gameId);
 
   if (!game) {
     return c.res({
       title: 'CharacterSheets Gallery',
-      image: defaultContainer(
-        <div
-          style={{
-            alignItems: 'center',
-            border: '6px solid #ff3864',
-            display: 'flex',
-            height: '60%',
-            width: '90%',
-          }}
-        >
-          <div
-            style={{
-              color: 'white',
-              fontSize: 48,
-              fontStyle: 'normal',
-              letterSpacing: '-0.025em',
-              lineHeight: 1.4,
-              padding: '0 120px',
-              whiteSpace: 'pre-wrap',
-              display: 'flex',
-              justifyContent: 'center',
-              width: '100%',
-            }}
-          >
-            An error occurred.
-          </div>
-        </div>,
+      image: (
+        <Background>
+          <Heading>An error occurred.</Heading>
+        </Background>
       ),
       intents: [<Button action="/">Return</Button>],
     });
@@ -145,55 +79,13 @@ app.frame('/game', async c => {
 
   return c.res({
     title: 'CharacterSheets Gallery',
-    image: defaultContainer(
-      <div
-        style={{
-          alignItems: 'center',
-          border: '6px solid #ff3864',
-          display: 'flex',
-          height: '80%',
-          width: '90%',
-          padding: '0 60px',
-          gap: '60px',
-        }}
-      >
+    image: (
+      <Background>
         <img src={game.image} alt={game.name} width={160} />
-        <div
-          style={{
-            alignItems: 'flex-start',
-            color: 'white',
-            fontSize: 48,
-            fontStyle: 'normal',
-            letterSpacing: '-0.025em',
-            lineHeight: 1.4,
-            whiteSpace: 'pre-wrap',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '100%',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              textAlign: 'left',
-              fontSize: 32,
-            }}
-          >
-            {game.name}
-          </div>
-          <div style={{ display: 'flex' }}>---</div>
-          <div
-            style={{
-              display: 'flex',
-              textAlign: 'left',
-              fontSize: 32,
-              width: '700px',
-            }}
-          >
-            {game.description}
-          </div>
-        </div>
-      </div>,
+        <Heading>{game.name}</Heading>
+        <Heading>---</Heading>
+        <Paragraph>{game.description}</Paragraph>
+      </Background>
     ),
     intents: [
       <TextInput placeholder="Enter new address..." />,

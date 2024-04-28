@@ -9,8 +9,8 @@ dependencies:
     specifier: ^16.4.5
     version: 16.4.5
   frog:
-    specifier: latest
-    version: 0.8.6(@types/node@14.18.33)(hono@4.0.0)(typescript@5.3.3)
+    specifier: ^0.8.7
+    version: 0.8.7(@types/node@14.18.33)(hono@4.0.0)(typescript@5.3.3)
   graphql:
     specifier: ^16.8.1
     version: 16.8.1
@@ -4128,8 +4128,8 @@ packages:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
     dev: true
 
-  /frog@0.8.6(@types/node@14.18.33)(hono@4.0.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-ESHQqSwNNE1QqnELso4BnXZxJYUIhjkuD6rgt+esdZuUznnMqbWTRzWbQkcv7NiWkPsBJ3HuXlOCgyNiux/kPg==}
+  /frog@0.8.7(@types/node@14.18.33)(hono@4.0.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-dKJ5XC+R4fn+Nk5mNverwYmNC28rfVbBVYd+B2RlBCVngoyaaRZgZ2YHhwAbpTjNdXnyyrrXxadPkGx0w5qL6Q==}
     hasBin: true
     peerDependencies:
       hono: ^4
