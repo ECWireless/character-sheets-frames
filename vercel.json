@@ -1,7 +1,7 @@
 {
   "functions": {
     "game-gallery/api/index.js": {
-      "includeFiles": "game-gallery/components/index.js"
+      "includeFiles": "game-gallery/components/**"
     }
   }
 }
