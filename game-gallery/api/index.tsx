@@ -6,7 +6,7 @@ import { handle } from 'frog/vercel';
 import { gnosis } from 'viem/chains';
 
 import { getGameMetaForChainId } from '../graphql/games.js';
-import { Box, Heading, Text, vars, VStack } from '../utils/ui.js';
+import { Box, Heading, Image, Text, vars, VStack } from '../utils/ui.js';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -26,22 +26,21 @@ app.frame('/', c => {
     title: 'Game Gallery',
     image: (
       <Box
+        backgroundColor="cardBG"
         grow
-        backgroundColor="dark"
-        flexDirection="column"
-        alignContent="center"
         justifyContent="center"
         height="100%"
         width="100%"
-        padding="16"
       >
-        <Box
-          alignItems="center"
-          backgroundColor="cardBG"
-          flex="1"
-          gap="20"
-          justifyContent="center"
-        >
+        <Box height="100%" left="0" position="absolute" top="0" width="100%">
+          <Image
+            height="100%"
+            objectFit="cover"
+            src="/RG_CS_bg.png"
+            width="100%"
+          />
+        </Box>
+        <VStack alignHorizontal="center" gap="24">
           <Heading color="white" weight="400">
             Welcome to CharacterSheets!
           </Heading>
@@ -66,7 +65,7 @@ app.frame('/', c => {
               view game on Gnosis chain.
             </Text>
           </VStack>
-        </Box>
+        </VStack>
       </Box>
     ),
     intents: [
