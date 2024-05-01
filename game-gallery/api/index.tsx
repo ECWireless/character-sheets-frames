@@ -6,7 +6,19 @@ import { handle } from 'frog/vercel';
 import { gnosis } from 'viem/chains';
 
 import { getGameMetaForChainId } from '../graphql/games.js';
-import { Box, Heading, Image, Text, vars, VStack } from '../utils/ui.js';
+import {
+  Box,
+  Column,
+  Columns,
+  Heading,
+  HStack,
+  Image,
+  Row,
+  Rows,
+  Text,
+  vars,
+  VStack,
+} from '../utils/ui.js';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -25,22 +37,8 @@ app.frame('/', c => {
   return c.res({
     title: 'Game Gallery',
     image: (
-      <Box
-        backgroundColor="cardBG"
-        grow
-        justifyContent="center"
-        height="100%"
-        width="100%"
-      >
-        <Box height="100%" left="0" position="absolute" top="0" width="100%">
-          <Image
-            height="100%"
-            objectFit="cover"
-            src="/RG_CS_bg.png"
-            width="100%"
-          />
-        </Box>
-        <VStack alignHorizontal="center" gap="24">
+      <Background>
+        <VStack alignHorizontal="center" gap="24" paddingTop="24">
           <Heading color="white" weight="400">
             Welcome to CharacterSheets!
           </Heading>
@@ -58,15 +56,15 @@ app.frame('/', c => {
             </svg>
           </Box>
           <VStack alignHorizontal="center" gap="4">
-            <Text color="white" weight="300" size="16">
+            <Text color="white" weight="300">
               Enter a game ID or address to
             </Text>
-            <Text color="white" weight="300" size="16">
+            <Text color="white" weight="300">
               view game on Gnosis chain.
             </Text>
           </VStack>
         </VStack>
-      </Box>
+      </Background>
     ),
     intents: [
       <TextInput placeholder="Game ID/address..." />,
@@ -82,9 +80,11 @@ app.frame('/game/:gameId?', async c => {
     return c.res({
       title: 'CharacterSheets Gallery',
       image: (
-        <Box>
-          <Heading>No game ID/address provided.</Heading>
-        </Box>
+        <Background>
+          <Text align="center" color="white" weight="300">
+            No game ID/address provided.
+          </Text>
+        </Background>
       ),
       intents: [<Button action="/">Return</Button>],
     });
@@ -96,9 +96,11 @@ app.frame('/game/:gameId?', async c => {
     return c.res({
       title: 'CharacterSheets Gallery',
       image: (
-        <Box>
-          <Heading>An error occurred.</Heading>
-        </Box>
+        <Background>
+          <Text align="center" color="white" weight="300">
+            An error occurred
+          </Text>
+        </Background>
       ),
       intents: [<Button action="/">Return</Button>],
     });
@@ -117,11 +119,96 @@ app.frame('/game/:gameId?', async c => {
   return c.res({
     title: 'CharacterSheets Gallery',
     image: (
-      <Box>
-        <img src={game.image} alt={game.name} width={160} />
-        <Heading>{game.name}</Heading>
-        <Heading>---</Heading>
-        <Text>{game.description}</Text>
+      <Box
+        backgroundColor="dark"
+        grow
+        height="100%"
+        justifyContent="center"
+        padding="16"
+        width="100%"
+      >
+        <Rows gap="8" grow>
+          <Row
+            alignVertical="center"
+            backgroundColor="cardBG"
+            height="1/2"
+            padding="24"
+          >
+            <HStack alignVertical="bottom" gap="20">
+              <img src={game.image} alt={game.name} width={160} />
+              <VStack gap="8">
+                <Heading color="white" weight="400">
+                  {game.name}
+                </Heading>
+                <Text color="white" weight="300" wrap="balance">
+                  {game.description}
+                </Text>
+              </VStack>
+            </HStack>
+          </Row>
+          <Row
+            alignVertical="top"
+            backgroundColor="cardBG"
+            height="1/2"
+            padding="24"
+          >
+            <Text
+              color="white"
+              size="12"
+              tracking="3"
+              weight="300"
+              wrap="balance"
+            >
+              GAME TOTALS
+            </Text>
+            <Columns>
+              <Column width="1/3">
+                <Box paddingTop="24">
+                  <HStack height="38">
+                    <Image height="48" src="/xp-box-left.png" width="16" />
+                    <Box
+                      alignVertical="center"
+                      borderBottom="4px solid"
+                      borderTop="4px solid"
+                      borderColor="xpBorder"
+                      padding="12"
+                    >
+                      <HStack gap="12">
+                        <Text color="softyellow" weight="700">
+                          {game.experience}
+                        </Text>
+                        <Box paddingTop="2">
+                          <Image height="14" src="/xp.png" width="20" />
+                        </Box>
+                      </HStack>
+                    </Box>
+                    <Box marginLeft="-2">
+                      <Image height="48" src="/xp-box-right.png" width="16" />
+                    </Box>
+                  </HStack>
+                </Box>
+              </Column>
+              <Column width="2/3">
+                <Box paddingTop="10">
+                  <VStack gap="12">
+                    <HStack gap="12">
+                      <Image height="24" src="/characters.png" width="24" />
+                      <Text color="white" size="18" weight="400">
+                        {game.characters.length} characters
+                      </Text>
+                    </HStack>
+                    <HStack gap="12">
+                      <Image height="24" src="/items.png" width="24" />
+                      <Text color="white" size="18" weight="400">
+                        {game.items.length} items
+                      </Text>
+                    </HStack>
+                  </VStack>
+                </Box>
+              </Column>
+            </Columns>
+          </Row>
+        </Rows>
       </Box>
     ),
     intents: [
@@ -146,52 +233,21 @@ export const POST = handle(app);
 COMPONENTS
 */
 
-// export const Background = ({
-//   children,
-// }: {
-//   children: JSX.Element | JSX.Element[];
-// }): JSX.Element => (
-//   <div
-//     style={{
-//       alignItems: 'center',
-//       background: colors.dark,
-//       display: 'flex',
-//       flexDirection: 'column',
-//       height: '100%',
-//       justifyContent: 'center',
-//       padding: '32px',
-//       textAlign: 'center',
-//       width: '100%',
-//     }}
-//   >
-//     <div
-//       style={{
-//         alignItems: 'center',
-//         background: colors.cardBG,
-//         display: 'flex',
-//         flexDirection: 'column',
-//         height: '100%',
-//         justifyContent: 'center',
-//         textAlign: 'center',
-//         width: '100%',
-//       }}
-//     >
-//       {children}
-//     </div>
-//   </div>
-// );
-
-// export const Paragraph = ({ children }: { children: string }): JSX.Element => (
-//   <div
-//     style={{
-//       color: 'white',
-//       fontSize: 32,
-//       fontStyle: 'normal',
-//       letterSpacing: '-0.025em',
-//       lineHeight: 1.4,
-//       display: 'flex',
-//     }}
-//   >
-//     {children}
-//   </div>
-// );
+export const Background = ({
+  children,
+}: {
+  children: JSX.Element | JSX.Element[];
+}): JSX.Element => (
+  <Box
+    backgroundColor="cardBG"
+    grow
+    height="100%"
+    justifyContent="center"
+    width="100%"
+  >
+    <Box height="100%" left="0" position="absolute" top="0" width="100%">
+      <Image height="100%" objectFit="cover" src="/RG_CS_bg.png" width="100%" />
+    </Box>
+    {children}
+  </Box>
+);

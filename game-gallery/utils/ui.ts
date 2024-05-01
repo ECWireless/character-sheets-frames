@@ -25,9 +25,15 @@ export const {
     softblue: '#7B91DD',
     softorange: '#BA9179',
     white: '#FFFFFF',
+    xpBorder: 'rgba(219, 211, 139, 0.75)',
   },
   fonts: {
     default: [
+      {
+        name: 'Unbounded',
+        source: 'google',
+        weight: 700,
+      },
       {
         name: 'Unbounded',
         source: 'google',
