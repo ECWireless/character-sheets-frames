@@ -1,3 +1,83 @@
+fragment CharacterInfo on Character {
+  id
+  characterId
+  game {
+    id
+    chainId
+    characters {
+      id
+    }
+  }
+  account
+  player
+  jailed
+  removed
+  approved
+  experience
+  uri
+  heldClasses {
+    experience
+    level
+    classEntity {
+      ...ClassInfo
+    }
+  }
+  heldItems {
+    amount
+    item {
+      ...ItemInfo
+    }
+  }
+  equippedItems {
+    heldItem {
+      amount
+    }
+    item {
+      ...ItemInfo
+    }
+    equippedAt
+  }
+}
+
+fragment ClassInfo on Class {
+  id
+  classId
+  uri
+  claimable
+  holders {
+    character {
+      id
+      characterId
+    }
+  }
+}
+
+fragment ItemInfo on Item {
+  id
+  itemId
+  uri
+  soulbound
+  distribution
+  supply
+  totalSupply
+  merkleRoot
+  craftable
+  claimRequirementsBytes
+  craftRequirementsBytes
+  holders {
+    character {
+      id
+      characterId
+    }
+  }
+  equippers {
+    character {
+      id
+      characterId
+    }
+  }
+}
+
 fragment GameMetaInfo on Game {
   id
   startedAt

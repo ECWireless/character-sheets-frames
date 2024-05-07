@@ -1,5 +1,21 @@
-import { GameMetaInfoFragment } from '../graphql/autogen/types.js';
-import { GameMeta, Metadata } from './types.js';
+import {
+  CharacterInfoFragment,
+  ClassInfoFragment,
+  GameMetaInfoFragment,
+  ItemInfoFragment,
+} from '../graphql/autogen/types.js';
+import {
+  decodeCraftRequirements,
+  decodeRequirementNode,
+} from './requirements.js';
+import {
+  Character,
+  Class,
+  EquippedItem,
+  GameMeta,
+  Item,
+  Metadata,
+} from './types.js';
 
 const IPFS_GATEWAYS = ['https://charactersheets.mypinata.cloud'];
 
@@ -71,6 +87,121 @@ const fetchMetadata = async (ipfsUri: string): Promise<Metadata> => {
     image: '',
     equippable_layer: null,
     attributes: [],
+  };
+};
+export const formatFullCharacter = async (
+  character: CharacterInfoFragment,
+): Promise<Character> => {
+  const metadata = await fetchMetadata(character.uri);
+
+  const heldClasses = await Promise.all(
+    character.heldClasses.map(async c => {
+      const info = await formatClass(c.classEntity);
+      return {
+        ...info,
+        experience: BigInt(c.experience).toString(),
+        level: BigInt(c.level).toString(),
+      };
+    }),
+  );
+
+  const heldItems = await Promise.all(
+    character.heldItems.map(async i => {
+      const info = await formatItem(i.item);
+      return {
+        ...info,
+        amount: BigInt(i.amount).toString(),
+      };
+    }),
+  );
+
+  const equippedItems: EquippedItem[] = [];
+  character.equippedItems.map(e => {
+    const info = heldItems.find(i => i.itemId === e.item.itemId);
+    if (!info) return null;
+    equippedItems.push({
+      ...info,
+      amount: BigInt(e.heldItem.amount).toString(),
+      equippedAt: Number(e.equippedAt) * 1000,
+    });
+    return null;
+  });
+
+  return {
+    id: character.id,
+    chainId: Number(character.game.chainId),
+    gameId: character.game.id,
+    uri: character.uri,
+    name: metadata.name,
+    description: metadata.description,
+    image: uriToHttp(metadata.image)[0],
+    attributes: metadata.attributes,
+    experience: character.experience,
+    characterId: character.characterId,
+    account: character.account,
+    player: character.player,
+    jailed: character.jailed,
+    approved: character.approved,
+    removed: character.removed,
+    heldClasses,
+    heldItems,
+    equippedItems,
+    equippable_layer: null,
+  };
+};
+
+export const formatClass = async (
+  classEntity: ClassInfoFragment,
+): Promise<Class> => {
+  const metadata = await fetchMetadata(classEntity.uri);
+
+  return {
+    id: classEntity.id,
+    uri: classEntity.uri,
+    name: metadata.name,
+    description: metadata.description,
+    image: uriToHttp(metadata.image)[0],
+    claimable: classEntity.claimable,
+    classId: classEntity.classId,
+    holders: classEntity.holders.map(h => h.character),
+    equippable_layer: null,
+    attributes: metadata.attributes,
+  };
+};
+
+export const formatItem = async (item: ItemInfoFragment): Promise<Item> => {
+  const metadata = await fetchMetadata(item.uri);
+
+  const decodedCraftRequirements = decodeCraftRequirements(
+    item.craftRequirementsBytes,
+  );
+
+  const decodedRequirementNode = decodeRequirementNode(
+    item.claimRequirementsBytes,
+  );
+
+  return {
+    id: item.id,
+    uri: item.uri,
+    name: metadata.name,
+    description: metadata.description,
+    image: uriToHttp(metadata.image)[0],
+    equippable_layer: metadata.equippable_layer
+      ? uriToHttp(metadata.equippable_layer)[0]
+      : null,
+    attributes: metadata.attributes,
+    itemId: item.itemId,
+    soulbound: item.soulbound,
+    supply: BigInt(item.supply).toString(),
+    totalSupply: BigInt(item.totalSupply).toString(),
+    amount: BigInt(0).toString(),
+    holders: item.holders.map(h => h.character),
+    equippers: item.equippers.map(e => e.character),
+    merkleRoot: item.merkleRoot,
+    distribution: item.distribution,
+    craftable: item.craftable,
+    craftRequirements: decodedCraftRequirements,
+    claimRequirements: decodedRequirementNode,
   };
 };
 

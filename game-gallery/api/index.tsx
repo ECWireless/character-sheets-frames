@@ -5,6 +5,7 @@ import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
 import { gnosis } from 'viem/chains';
 
+import { getCharacterForChainId } from '../graphql/characters.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
 import {
   Box,
@@ -68,12 +69,12 @@ app.frame('/', c => {
     ),
     intents: [
       <TextInput placeholder="Game ID/address..." />,
-      <Button action={`/game`}>View Game</Button>,
+      <Button action={`/games`}>View Game</Button>,
     ],
   });
 });
 
-app.frame('/game/:gameId?', async c => {
+app.frame('/games/:gameId?', async c => {
   const gameId = c.req.param('gameId') ?? c.inputText ?? '';
 
   if (!gameId) {
@@ -213,9 +214,71 @@ app.frame('/game/:gameId?', async c => {
     ),
     intents: [
       <TextInput placeholder="Enter new address..." />,
-      <Button value="characters">Characters</Button>,
+      <Button action={`/characters/${game.characters[0]?.id}`}>
+        Characters
+      </Button>,
       <Button value="classes">Classes</Button>,
       <Button value="items">Items</Button>,
+      <Button.Link href={`https://charactersheets.io/games/gnosis/${game.id}`}>
+        App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.frame('/characters/:characterId?', async c => {
+  const characterId = c.req.param('characterId') ?? c.inputText ?? '';
+
+  if (!characterId) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            No characeter ID provided.
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const { character } = await getCharacterForChainId(gnosis.id, characterId);
+
+  if (!character) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            An error occurred
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  return c.res({
+    title: 'CharacterSheets Gallery',
+    image: (
+      <Background>
+        <Text align="center" color="white" weight="300">
+          Character ID: {characterId}
+        </Text>
+        <Text align="center" color="white" weight="300">
+          Character Name: {character.name}
+        </Text>
+      </Background>
+    ),
+    intents: [
+      <Button action={`/games/${character.gameId}`}>Return to game</Button>,
+      <Button action="/">Share</Button>,
+      <Button
+        action={`https://charactersheets.io/games/gnosis/${character.gameId}`}
+      >
+        View in app
+      </Button>,
     ],
   });
 });

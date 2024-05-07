@@ -1,3 +1,9 @@
+query GetCharacter($characterId: ID!) {
+  character(id: $characterId) {
+    ...CharacterInfo
+  }
+}
+
 query GetGameMeta($gameId: ID!) {
   game(id: $gameId) {
     ...GameMetaInfo
