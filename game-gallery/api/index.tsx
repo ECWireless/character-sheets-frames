@@ -259,6 +259,20 @@ app.frame('/characters/:characterId?', async c => {
     });
   }
 
+  const sortedCharacterIds = sortCharactersIds(
+    character.gameId,
+    character.gameCharacters,
+  );
+
+  const currentCharacterIndex = sortedCharacterIds.findIndex(
+    c => c === characterId.toLowerCase(),
+  );
+
+  const nextCharacterIndex =
+    currentCharacterIndex + 1 >= sortedCharacterIds.length
+      ? 0
+      : currentCharacterIndex + 1;
+
   return c.res({
     title: 'CharacterSheets Gallery',
     image: (
@@ -272,12 +286,15 @@ app.frame('/characters/:characterId?', async c => {
       </Background>
     ),
     intents: [
-      <Button action={`/games/${character.gameId}`}>Return to game</Button>,
+      <Button action={`/characters/${sortedCharacterIds[nextCharacterIndex]}`}>
+        Next
+      </Button>,
+      <Button action={`/games/${character.gameId}`}>Return</Button>,
       <Button action="/">Share</Button>,
       <Button
         action={`https://charactersheets.io/games/gnosis/${character.gameId}`}
       >
-        View in app
+        App
       </Button>,
     ],
   });
@@ -314,3 +331,13 @@ export const Background = ({
     {children}
   </Box>
 );
+
+const sortCharactersIds = (
+  gameId: string,
+  characterIds: string[],
+): string[] => {
+  return characterIds
+    .map(id => id.split('-').pop())
+    .sort((a, b) => Number(a) - Number(b))
+    .map(id => `${gameId}-character-${id}`);
+};

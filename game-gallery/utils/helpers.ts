@@ -130,6 +130,7 @@ export const formatFullCharacter = async (
   return {
     id: character.id,
     chainId: Number(character.game.chainId),
+    gameCharacters: character.game.characters.map(c => c.id),
     gameId: character.game.id,
     uri: character.uri,
     name: metadata.name,
