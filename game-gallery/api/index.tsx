@@ -3,10 +3,12 @@ import { devtools } from 'frog/dev';
 import { serveStatic } from 'frog/serve-static';
 // import { neynar } from 'frog/hubs'
 import { handle } from 'frog/vercel';
+import { hexToNumber, keccak256, toBytes } from 'viem';
 import { gnosis } from 'viem/chains';
 
 import { getCharacterForChainId } from '../graphql/characters.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
+import { HeldClass } from '../utils/types.js';
 import {
   Box,
   Column,
@@ -276,14 +278,54 @@ app.frame('/characters/:characterId?', async c => {
   return c.res({
     title: 'CharacterSheets Gallery',
     image: (
-      <Background>
-        <Text align="center" color="white" weight="300">
-          Character ID: {characterId}
-        </Text>
-        <Text align="center" color="white" weight="300">
-          Character Name: {character.name}
-        </Text>
-      </Background>
+      <Box
+        backgroundColor="dark"
+        grow
+        height="100%"
+        justifyContent="center"
+        padding="16"
+        width="100%"
+      >
+        <Box backgroundColor="cardBG" height="100%" padding="24">
+          <Box border="1px solid #fff" height="100%" padding="24">
+            <Columns>
+              <Column width="2/5">
+                <Image borderRadius="10" height="100%" src={character.image} />
+              </Column>
+              <Column width="3/5">
+                <VStack gap="14">
+                  <Heading color="white" size="20" weight="400">
+                    {character.name}
+                  </Heading>
+                  <Text color="white" size="12" weight="300">
+                    Character ID: {character.characterId}
+                  </Text>
+                  <Text color="white" size="12" weight="300">
+                    {character.description}
+                  </Text>
+                  <HStack gap="8">
+                    {character.heldClasses.map(heldClass => (
+                      <ClassTag {...heldClass} />
+                    ))}
+                  </HStack>
+                  <HStack gap="12">
+                    <Image height="16" src="/items.png" width="16" />
+                    <Text
+                      color="white"
+                      size="12"
+                      tracking="3"
+                      weight="300"
+                      wrap="balance"
+                    >
+                      INVENTORY ({character.heldItems.length.toString()})
+                    </Text>
+                  </HStack>
+                </VStack>
+              </Column>
+            </Columns>
+          </Box>
+        </Box>
+      </Box>
     ),
     intents: [
       <Button action={`/characters/${sortedCharacterIds[nextCharacterIndex]}`}>
@@ -331,6 +373,51 @@ export const Background = ({
     {children}
   </Box>
 );
+
+const colors = [
+  'softgreen',
+  'softpurple',
+  'softblue',
+  'softyellow',
+  'softorange',
+];
+
+export const ClassTag = (heldClass: HeldClass): JSX.Element => {
+  const { image, level, name } = heldClass;
+
+  const bgColor = () => {
+    const hexValue = keccak256(toBytes(name));
+    const index = hexToNumber(hexValue) % colors.length;
+    return colors[index] as
+      | 'softgreen'
+      | 'softpurple'
+      | 'softblue'
+      | 'softyellow'
+      | 'softorange';
+  };
+
+  return (
+    <Box
+      backgroundColor={bgColor()}
+      borderRadius="256"
+      paddingBottom="8"
+      paddingLeft="12"
+      paddingRight="12"
+      paddingTop="8"
+    >
+      <HStack gap="8">
+        <Image height="18" src={image} width="18" />
+        <Text color="dark" size="14" weight="700">
+          {level}
+        </Text>
+      </HStack>
+    </Box>
+  );
+};
+
+/*
+Helpers
+*/
 
 const sortCharactersIds = (
   gameId: string,
