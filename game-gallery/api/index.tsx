@@ -286,25 +286,59 @@ app.frame('/characters/:characterId?', async c => {
         padding="16"
         width="100%"
       >
-        <Box backgroundColor="cardBG" height="100%" padding="24">
-          <Box border="1px solid #fff" height="100%" padding="24">
-            <Columns>
-              <Column width="2/5">
-                <Image borderRadius="10" height="100%" src={character.image} />
+        <Box backgroundColor="cardBG" padding="20" height="100%">
+          <Box border="1px solid #fff" padding="20" height="100%">
+            <Columns gap="20">
+              <Column width="1/3">
+                <Box position="relative">
+                  <Image
+                    borderRadius="10"
+                    height="100%"
+                    objectFit="cover"
+                    src={character.image}
+                    width="100%"
+                  />
+                  <Box
+                    position="absolute"
+                    transform="translateX(-50%)"
+                    left="80"
+                    bottom="24"
+                  >
+                    <HStack height="32">
+                      <Image height="40" src="/xp-box-left.png" width="16" />
+                      <Box
+                        alignVertical="center"
+                        borderBottom="4px solid"
+                        borderTop="4px solid"
+                        borderColor="xpBorder"
+                        padding="8"
+                        marginLeft="-1"
+                      >
+                        <Text color="softyellow" weight="700">
+                          {character.experience}
+                        </Text>
+                      </Box>
+                      <Box marginLeft="-2">
+                        <Image height="40" src="/xp-box-right.png" width="16" />
+                      </Box>
+                    </HStack>
+                  </Box>
+                </Box>
               </Column>
-              <Column width="3/5">
+              <Column width="2/3">
                 <VStack gap="14">
                   <Heading color="white" size="20" weight="400">
-                    {character.name}
+                    {character.name.replace(/Ξ/g, 'E')}
                   </Heading>
                   <Text color="white" size="12" weight="300">
                     Character ID: {character.characterId}
                   </Text>
                   <Text color="white" size="12" weight="300">
-                    {character.description}
+                    {character.description.slice(0, 170)}...
                   </Text>
                   <HStack gap="8">
-                    {character.heldClasses.map(heldClass => (
+                    {/* Max of 4 rendered classes */}
+                    {character.heldClasses.slice(0, 4).map(heldClass => (
                       <ClassTag {...heldClass} />
                     ))}
                   </HStack>
@@ -400,14 +434,14 @@ export const ClassTag = (heldClass: HeldClass): JSX.Element => {
     <Box
       backgroundColor={bgColor()}
       borderRadius="256"
-      paddingBottom="8"
-      paddingLeft="12"
-      paddingRight="12"
-      paddingTop="8"
+      paddingBottom="6"
+      paddingLeft="14"
+      paddingRight="14"
+      paddingTop="6"
     >
-      <HStack gap="8">
-        <Image height="18" src={image} width="18" />
-        <Text color="dark" size="14" weight="700">
+      <HStack gap="6">
+        <Image height="20" objectFit="contain" src={image} width="20" />
+        <Text color="dark" size="16" weight="700">
           {level}
         </Text>
       </HStack>
