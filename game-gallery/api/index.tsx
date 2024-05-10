@@ -9,6 +9,7 @@ import { gnosis } from 'viem/chains';
 import { getCharacterById } from '../graphql/characters.js';
 import { getClassById } from '../graphql/classes.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
+import { getItemById } from '../graphql/items.js';
 import { HeldClass } from '../utils/types.js';
 import {
   Box,
@@ -219,10 +220,8 @@ app.frame('/games/:gameId?', async c => {
       <Button action={`/characters/${game.characters[0]?.id}`}>
         Characters
       </Button>,
-      <Button action={`/classes/${game.classes[0]?.id}`} value="classes">
-        Classes
-      </Button>,
-      <Button value="items">Items</Button>,
+      <Button action={`/classes/${game.classes[0]?.id}`}>Classes</Button>,
+      <Button action={`/items/${game.items[0]?.id}`}>Items</Button>,
       <Button.Link href={`https://charactersheets.io/games/gnosis/${game.id}`}>
         App
       </Button.Link>,
@@ -449,56 +448,25 @@ app.frame('/classes/:classId?', async c => {
               </VStack>
               <Columns gap="20" paddingTop="40">
                 <Column width="1/2">
-                  <VStack gap="8">
-                    <Text tracking="3">
-                      <Box
-                        color="white"
-                        fontSize={{ custom: '18px' }}
-                        fontWeight="300"
-                      >
-                        CLASS ID
-                      </Box>
-                    </Text>
-                    <Text color="white" size="14">
-                      {classEntity.classId}
-                    </Text>
-                  </VStack>
+                  <Stat heading="CLASS ID" value={classEntity.classId} />
                 </Column>
 
                 <Column width="1/2">
-                  <VStack gap="8">
-                    <Text tracking="3">
-                      <Box
-                        color="white"
-                        fontSize={{ custom: '18px' }}
-                        fontWeight="300"
-                      >
-                        HELD BY
-                      </Box>
-                    </Text>
-                    <Text color="white" size="14">
-                      {classEntity.holders.length} characters
-                    </Text>
-                  </VStack>
+                  <Stat
+                    heading="HELD BY"
+                    value={`${classEntity.holders.length} character${
+                      classEntity.holders.length !== 1 ? 's' : ''
+                    }`}
+                  />
                 </Column>
               </Columns>
 
               <Columns paddingTop="20">
                 <Column width="1/2">
-                  <VStack gap="8">
-                    <Text tracking="3">
-                      <Box
-                        color="white"
-                        fontSize={{ custom: '18px' }}
-                        fontWeight="300"
-                      >
-                        CLAIMABLE BY
-                      </Box>
-                    </Text>
-                    <Text color="white" size="14">
-                      {classEntity.claimable ? 'Anyone' : 'only GameMaster'}
-                    </Text>
-                  </VStack>
+                  <Stat
+                    heading="CLAIMABLE BY"
+                    value={classEntity.claimable ? 'Anyone' : 'only GameMaster'}
+                  />
                 </Column>
               </Columns>
             </Column>
@@ -521,6 +489,136 @@ app.frame('/classes/:classId?', async c => {
       <Button action="/">Share</Button>,
       <Button.Link
         href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
+      >
+        App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.frame('/items/:itemId?', async c => {
+  const itemId = c.req.param('itemId') ?? '';
+
+  if (!itemId) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            No item ID provided.
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const { item } = await getItemById(gnosis.id, itemId);
+
+  if (!item) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            An error occurred
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const sortedItemIds = sortById(item.gameId, item.gameItems, 'item');
+
+  const currentItemIndex = sortedItemIds.findIndex(
+    c => c === itemId.toLowerCase(),
+  );
+
+  const nextItemIndex =
+    currentItemIndex + 1 >= sortedItemIds.length ? 0 : currentItemIndex + 1;
+
+  return c.res({
+    title: 'CharacterSheets Gallery',
+    image: (
+      <Box
+        backgroundColor="dark"
+        grow
+        height="100%"
+        justifyContent="center"
+        padding="16"
+        width="100%"
+      >
+        <Box backgroundColor="cardBG" height="100%" padding="20">
+          <Columns gap="8" padding="12">
+            <Column width="2/3">
+              <VStack gap="8">
+                <Text color="white" size="20">
+                  {item.name}
+                </Text>
+                <Text color="white" size="12" weight="300">
+                  {shortendText(item.description, 170)}
+                </Text>
+              </VStack>
+              <Columns paddingTop="28">
+                <Column width="1/2">
+                  <Stat heading="ITEM ID" value={item.itemId} />
+                </Column>
+                <Column width="1/2">
+                  <Stat
+                    heading="HELD BY"
+                    value={`${item.holders.length} character${
+                      item.holders.length !== 1 ? 's' : ''
+                    }`}
+                  />
+                </Column>
+              </Columns>
+
+              <Columns paddingTop="20">
+                <Column width="1/2">
+                  <Stat
+                    heading="SOULBOUND?"
+                    value={item.soulbound ? 'Yes' : 'No'}
+                  />
+                </Column>
+                <Column width="1/2">
+                  <Stat
+                    heading="ITEM SUPPLY"
+                    value={`${item.supply} / ${item.totalSupply}`}
+                  />
+                </Column>
+              </Columns>
+
+              <Columns paddingTop="20">
+                <Column width="1/2">
+                  <Stat
+                    heading="EQUIPPED BY"
+                    value={`${item.equippers.length} character${
+                      item.equippers.length !== 1 ? 's' : ''
+                    }`}
+                  />
+                </Column>
+                <Column width="1/2">
+                  <Stat
+                    heading="CRAFTABLE?"
+                    value={item.craftable ? 'Yes' : 'No'}
+                  />
+                </Column>
+              </Columns>
+            </Column>
+            <Column alignHorizontal="center" width="1/3">
+              <Image height="100%" objectFit="contain" src={item.image} />
+            </Column>
+          </Columns>
+        </Box>
+      </Box>
+    ),
+    intents: [
+      <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
+      <Button action={`/games/${item.gameId}`}>Return</Button>,
+      <Button action="/">Share</Button>,
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${item.gameId}`}
       >
         App
       </Button.Link>,
@@ -598,6 +696,27 @@ export const ClassTag = (heldClass: HeldClass): JSX.Element => {
         </Text>
       </HStack>
     </Box>
+  );
+};
+
+export const Stat = ({
+  heading,
+  value,
+}: {
+  heading: string;
+  value: string;
+}): JSX.Element => {
+  return (
+    <VStack gap="8">
+      <Text tracking="3">
+        <Box color="white" fontSize={{ custom: '18px' }} fontWeight="300">
+          {heading}
+        </Box>
+      </Text>
+      <Text color="white" size="14">
+        {value}
+      </Text>
+    </VStack>
   );
 };
 

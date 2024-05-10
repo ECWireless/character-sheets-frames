@@ -15,3 +15,9 @@ query GetGameMeta($gameId: ID!) {
     ...GameMetaInfo
   }
 }
+
+query GetItem($itemId: ID!) {
+  item(id: $itemId) {
+    ...ItemInfo
+  }
+}

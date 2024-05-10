@@ -71,6 +71,8 @@ export type HeldClass = Class & {
 export type Item = Metadata & {
   id: string;
   itemId: string;
+  gameId: string;
+  gameItems: string[];
   uri: string;
   soulbound: boolean;
   distribution: string;

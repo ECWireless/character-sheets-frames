@@ -185,6 +185,8 @@ export const formatItem = async (item: ItemInfoFragment): Promise<Item> => {
 
   return {
     id: item.id,
+    gameId: item.game.id,
+    gameItems: item.game.items.map(i => i.id),
     uri: item.uri,
     name: metadata.name,
     description: metadata.description,

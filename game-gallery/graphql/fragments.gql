@@ -61,6 +61,12 @@ fragment ClassInfo on Class {
 fragment ItemInfo on Item {
   id
   itemId
+  game {
+    id
+    items {
+      id
+    }
+  }
   uri
   soulbound
   distribution
