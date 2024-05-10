@@ -158,6 +158,8 @@ export const formatClass = async (
 
   return {
     id: classEntity.id,
+    gameId: classEntity.game.id,
+    gameClasses: classEntity.game.classes.map(c => c.id),
     uri: classEntity.uri,
     name: metadata.name,
     description: metadata.description,

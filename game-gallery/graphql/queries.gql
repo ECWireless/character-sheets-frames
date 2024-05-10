@@ -4,6 +4,12 @@ query GetCharacter($characterId: ID!) {
   }
 }
 
+query GetClass($classId: ID!) {
+  class(id: $classId) {
+    ...ClassInfo
+  }
+}
+
 query GetGameMeta($gameId: ID!) {
   game(id: $gameId) {
     ...GameMetaInfo

@@ -6,7 +6,7 @@ import {
 } from './autogen/types.js';
 import { getGraphClient } from './client.js';
 
-export const getCharacterForChainId = async (
+export const getCharacterById = async (
   chainId: number,
   characterId: string,
 ): Promise<{

@@ -6,7 +6,8 @@ import { handle } from 'frog/vercel';
 import { hexToNumber, keccak256, toBytes } from 'viem';
 import { gnosis } from 'viem/chains';
 
-import { getCharacterForChainId } from '../graphql/characters.js';
+import { getCharacterById } from '../graphql/characters.js';
+import { getClassById } from '../graphql/classes.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
 import { HeldClass } from '../utils/types.js';
 import {
@@ -215,11 +216,12 @@ app.frame('/games/:gameId?', async c => {
       </Box>
     ),
     intents: [
-      <TextInput placeholder="Enter new address..." />,
       <Button action={`/characters/${game.characters[0]?.id}`}>
         Characters
       </Button>,
-      <Button value="classes">Classes</Button>,
+      <Button action={`/classes/${game.classes[0]?.id}`} value="classes">
+        Classes
+      </Button>,
       <Button value="items">Items</Button>,
       <Button.Link href={`https://charactersheets.io/games/gnosis/${game.id}`}>
         App
@@ -229,7 +231,7 @@ app.frame('/games/:gameId?', async c => {
 });
 
 app.frame('/characters/:characterId?', async c => {
-  const characterId = c.req.param('characterId') ?? c.inputText ?? '';
+  const characterId = c.req.param('characterId') ?? '';
 
   if (!characterId) {
     return c.res({
@@ -245,7 +247,7 @@ app.frame('/characters/:characterId?', async c => {
     });
   }
 
-  const { character } = await getCharacterForChainId(gnosis.id, characterId);
+  const { character } = await getCharacterById(gnosis.id, characterId);
 
   if (!character) {
     return c.res({
@@ -261,9 +263,10 @@ app.frame('/characters/:characterId?', async c => {
     });
   }
 
-  const sortedCharacterIds = sortCharactersIds(
+  const sortedCharacterIds = sortById(
     character.gameId,
     character.gameCharacters,
+    'character',
   );
 
   const currentCharacterIndex = sortedCharacterIds.findIndex(
@@ -367,11 +370,86 @@ app.frame('/characters/:characterId?', async c => {
       </Button>,
       <Button action={`/games/${character.gameId}`}>Return</Button>,
       <Button action="/">Share</Button>,
-      <Button
-        action={`https://charactersheets.io/games/gnosis/${character.gameId}`}
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${character.gameId}`}
       >
         App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.frame('/classes/:classId?', async c => {
+  const classId = c.req.param('classId') ?? '';
+
+  if (!classId) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            No class ID provided.
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const { classEntity } = await getClassById(gnosis.id, classId);
+
+  if (!classEntity) {
+    return c.res({
+      title: 'CharacterSheets Gallery',
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            An error occurred
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const sortedClassIds = sortById(
+    classEntity.gameId,
+    classEntity.gameClasses,
+    'class',
+  );
+
+  const currentClassIndex = sortedClassIds.findIndex(
+    c => c === classId.toLowerCase(),
+  );
+
+  const nextClassIndex =
+    currentClassIndex + 1 >= sortedClassIds.length ? 0 : currentClassIndex + 1;
+
+  return c.res({
+    title: 'CharacterSheets Gallery',
+    image: (
+      <Box
+        backgroundColor="dark"
+        grow
+        height="100%"
+        justifyContent="center"
+        padding="16"
+        width="100%"
+      >
+        <Text>{classEntity.name}</Text>
+      </Box>
+    ),
+    intents: [
+      <Button action={`/classes/${sortedClassIds[nextClassIndex]}`}>
+        Next
       </Button>,
+      <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
+      <Button action="/">Share</Button>,
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
+      >
+        App
+      </Button.Link>,
     ],
   });
 });
@@ -453,12 +531,13 @@ export const ClassTag = (heldClass: HeldClass): JSX.Element => {
 Helpers
 */
 
-const sortCharactersIds = (
+const sortById = (
   gameId: string,
   characterIds: string[],
+  type: 'character' | 'class' | 'item',
 ): string[] => {
   return characterIds
     .map(id => id.split('-').pop())
     .sort((a, b) => Number(a) - Number(b))
-    .map(id => `${gameId}-character-${id}`);
+    .map(id => `${gameId}-${type}-${id}`);
 };

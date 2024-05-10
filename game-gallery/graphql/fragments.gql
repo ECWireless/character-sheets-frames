@@ -42,6 +42,12 @@ fragment CharacterInfo on Character {
 fragment ClassInfo on Class {
   id
   classId
+  game {
+    id
+    classes {
+      id
+    }
+  }
   uri
   claimable
   holders {

@@ -32,6 +32,8 @@ export type Character = Metadata & {
 export type Class = Metadata & {
   id: string;
   classId: string;
+  gameId: string;
+  gameClasses: string[];
   uri: string;
   claimable: boolean;
   holders: { id: string; characterId: string }[];
