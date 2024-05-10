@@ -337,7 +337,7 @@ app.frame('/characters/:characterId?', async c => {
                     Character ID: {character.characterId}
                   </Text>
                   <Text color="white" size="12" weight="300">
-                    {character.description.slice(0, 170)}...
+                    {shortendText(character.description, 170)}
                   </Text>
                   <HStack gap="8">
                     {/* Max of 4 rendered classes */}
@@ -436,7 +436,81 @@ app.frame('/classes/:classId?', async c => {
         padding="16"
         width="100%"
       >
-        <Text>{classEntity.name}</Text>
+        <Box backgroundColor="cardBG" height="100%" padding="20">
+          <Columns gap="8" padding="12">
+            <Column paddingTop="40" width="1/2">
+              <VStack gap="8">
+                <Text color="white" size="20">
+                  {classEntity.name}
+                </Text>
+                <Text color="white" size="12" weight="300">
+                  {shortendText(classEntity.description, 170)}
+                </Text>
+              </VStack>
+              <Columns gap="20" paddingTop="40">
+                <Column width="1/2">
+                  <VStack gap="8">
+                    <Text tracking="3">
+                      <Box
+                        color="white"
+                        fontSize={{ custom: '18px' }}
+                        fontWeight="300"
+                      >
+                        CLASS ID
+                      </Box>
+                    </Text>
+                    <Text color="white" size="14">
+                      {classEntity.classId}
+                    </Text>
+                  </VStack>
+                </Column>
+
+                <Column width="1/2">
+                  <VStack gap="8">
+                    <Text tracking="3">
+                      <Box
+                        color="white"
+                        fontSize={{ custom: '18px' }}
+                        fontWeight="300"
+                      >
+                        HELD BY
+                      </Box>
+                    </Text>
+                    <Text color="white" size="14">
+                      {classEntity.holders.length} characters
+                    </Text>
+                  </VStack>
+                </Column>
+              </Columns>
+
+              <Columns paddingTop="20">
+                <Column width="1/2">
+                  <VStack gap="8">
+                    <Text tracking="3">
+                      <Box
+                        color="white"
+                        fontSize={{ custom: '18px' }}
+                        fontWeight="300"
+                      >
+                        CLAIMABLE BY
+                      </Box>
+                    </Text>
+                    <Text color="white" size="14">
+                      {classEntity.claimable ? 'Anyone' : 'only GameMaster'}
+                    </Text>
+                  </VStack>
+                </Column>
+              </Columns>
+            </Column>
+            <Column alignHorizontal="center" width="1/2">
+              <Image
+                height="100%"
+                objectFit="contain"
+                src={classEntity.image}
+              />
+            </Column>
+          </Columns>
+        </Box>
       </Box>
     ),
     intents: [
@@ -540,4 +614,8 @@ const sortById = (
     .map(id => id.split('-').pop())
     .sort((a, b) => Number(a) - Number(b))
     .map(id => `${gameId}-${type}-${id}`);
+};
+
+const shortendText = (text: string, length: number): string => {
+  return text.length > length ? `${text.slice(0, length)}...` : text;
 };
