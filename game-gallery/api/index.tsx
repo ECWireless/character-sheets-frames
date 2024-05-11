@@ -1,7 +1,7 @@
 import { Button, Frog, TextInput } from 'frog';
 import { devtools } from 'frog/dev';
+import { pinata } from 'frog/hubs';
 import { serveStatic } from 'frog/serve-static';
-// import { neynar } from 'frog/hubs'
 import { handle } from 'frog/vercel';
 import { hexToNumber, keccak256, toBytes } from 'viem';
 import { gnosis } from 'viem/chains';
@@ -34,8 +34,10 @@ export const app = new Frog({
   assetsPath: '/',
   basePath: '/api',
   ui: { vars },
-  // Supply a Hub to enable frame verification.
-  // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
+  browserLocation: 'https://charactersheets.io',
+  secret: process.env.SECRET,
+  verify: 'silent',
+  hub: pinata(),
 });
 
 app.frame('/', c => {
@@ -368,7 +370,11 @@ app.frame('/characters/:characterId?', async c => {
         Next
       </Button>,
       <Button action={`/games/${character.gameId}`}>Return</Button>,
-      <Button action="/">Share</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames-qbi0jsz02-coopa.vercel.app/api/characters/${character.id}`}
+      >
+        Share
+      </Button.Link>,
       <Button.Link
         href={`https://charactersheets.io/games/gnosis/${character.gameId}`}
       >
@@ -486,7 +492,11 @@ app.frame('/classes/:classId?', async c => {
         Next
       </Button>,
       <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
-      <Button action="/">Share</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames-qbi0jsz02-coopa.vercel.app/api/classes/${classEntity.id}`}
+      >
+        Share
+      </Button.Link>,
       <Button.Link
         href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
       >
@@ -616,7 +626,11 @@ app.frame('/items/:itemId?', async c => {
     intents: [
       <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
       <Button action={`/games/${item.gameId}`}>Return</Button>,
-      <Button action="/">Share</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames-qbi0jsz02-coopa.vercel.app/api/items/${item.id}`}
+      >
+        Share
+      </Button.Link>,
       <Button.Link
         href={`https://charactersheets.io/games/gnosis/${item.gameId}`}
       >
