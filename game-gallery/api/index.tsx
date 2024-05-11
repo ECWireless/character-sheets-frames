@@ -3,6 +3,7 @@ import { devtools } from 'frog/dev';
 import { pinata } from 'frog/hubs';
 import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
+import { PinataFDK } from 'pinata-fdk';
 import { hexToNumber, keccak256, toBytes } from 'viem';
 import { gnosis } from 'viem/chains';
 
@@ -10,6 +11,7 @@ import { getCharacterById } from '../graphql/characters.js';
 import { getClassById } from '../graphql/classes.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
 import { getItemById } from '../graphql/items.js';
+import { PINATA_JWT } from '../utils/constants.js';
 import { HeldClass } from '../utils/types.js';
 import {
   Box,
@@ -30,6 +32,11 @@ import {
 //   runtime: 'edge',
 // }
 
+const fdk = new PinataFDK({
+  pinata_jwt: PINATA_JWT,
+  pinata_gateway: '',
+});
+
 export const app = new Frog({
   assetsPath: '/',
   basePath: '/api',
@@ -39,6 +46,13 @@ export const app = new Frog({
   verify: 'silent',
   hub: pinata(),
 });
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+app.use(
+  '/',
+  fdk.analyticsMiddleware({ frameId: 'character-sheets-game-gallery' }),
+);
 
 app.frame('/', c => {
   return c.res({
