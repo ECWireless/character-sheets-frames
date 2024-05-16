@@ -384,7 +384,7 @@ app.frame('/characters/:characterId?', async c => {
       </Button>,
       <Button action={`/games/${character.gameId}`}>Return</Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames.vercel.app/api/characters/${character.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/characters/${character.id}`}
       >
         Share
       </Button.Link>,
@@ -506,7 +506,7 @@ app.frame('/classes/:classId?', async c => {
       </Button>,
       <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames.vercel.app/api/classes/${classEntity.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/classes/${classEntity.id}`}
       >
         Share
       </Button.Link>,
@@ -640,7 +640,7 @@ app.frame('/items/:itemId?', async c => {
       <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
       <Button action={`/games/${item.gameId}`}>Return</Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://character-sheets-frames.vercel.app/api/items/${item.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/items/${item.id}`}
       >
         Share
       </Button.Link>,
