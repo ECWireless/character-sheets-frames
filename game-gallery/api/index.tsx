@@ -89,7 +89,6 @@ app.frame('/games/:gameId?', async c => {
 
   if (!gameId) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -105,7 +104,6 @@ app.frame('/games/:gameId?', async c => {
 
   if (!game) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -262,7 +260,6 @@ app.frame('/characters/:characterId?', async c => {
 
   if (!characterId) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -278,7 +275,6 @@ app.frame('/characters/:characterId?', async c => {
 
   if (!character) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -305,8 +301,58 @@ app.frame('/characters/:characterId?', async c => {
       ? 0
       : currentCharacterIndex + 1;
 
+  const characterObjectUrl = encodeURIComponent(
+    JSON.stringify({
+      characterId: character.characterId,
+      description: character.description,
+      experience: character.experience,
+      // Max of 4 rendered classes
+      heldClasses: character.heldClasses.slice(0, 4),
+      image: character.image,
+      name: character.name,
+      numberOfHeldItems: character.heldItems.length.toString(),
+    }),
+  );
+
   return c.res({
-    title: 'CharacterSheets Gallery',
+    image: `/characterImg/:${characterObjectUrl}`,
+    intents: [
+      <Button action={`/characters/${sortedCharacterIds[nextCharacterIndex]}`}>
+        Next
+      </Button>,
+      <Button action={`/games/${character.gameId}`}>Return</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/characters/${character.id}`}
+      >
+        Share
+      </Button.Link>,
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${character.gameId}`}
+      >
+        App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.image('/characterImg/:characterObjectUrl?', async c => {
+  const characterObjectUrl = c.req.param('characterObjectUrl') ?? '';
+  const character = JSON.parse(characterObjectUrl.slice(1));
+
+  const imageText = await fetch(character.image).then(res => res.text());
+  const isSvg = imageText.startsWith('<svg');
+
+  if (isSvg) {
+    const svgBuffer = Buffer.from(imageText);
+    const svgBase64 = svgBuffer.toString('base64');
+
+    character.image = `data:image/svg+xml;base64,${svgBase64}`;
+  }
+
+  return c.res({
+    headers: {
+      'cache-control': 'max-age=0',
+    },
     image: (
       <Box
         backgroundColor="dark"
@@ -367,8 +413,7 @@ app.frame('/characters/:characterId?', async c => {
                     {shortendText(character.description, 170)}
                   </Text>
                   <HStack gap="8">
-                    {/* Max of 4 rendered classes */}
-                    {character.heldClasses.slice(0, 4).map(heldClass => (
+                    {character.heldClasses.map((heldClass: HeldClass) => (
                       <ClassTag {...heldClass} />
                     ))}
                   </HStack>
@@ -381,7 +426,7 @@ app.frame('/characters/:characterId?', async c => {
                       weight="300"
                       wrap="balance"
                     >
-                      INVENTORY ({character.heldItems.length.toString()})
+                      INVENTORY ({character.numberOfHeldItems})
                     </Text>
                   </HStack>
                 </VStack>
@@ -391,22 +436,6 @@ app.frame('/characters/:characterId?', async c => {
         </Box>
       </Box>
     ),
-    intents: [
-      <Button action={`/characters/${sortedCharacterIds[nextCharacterIndex]}`}>
-        Next
-      </Button>,
-      <Button action={`/games/${character.gameId}`}>Return</Button>,
-      <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/characters/${character.id}`}
-      >
-        Share
-      </Button.Link>,
-      <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${character.gameId}`}
-      >
-        App
-      </Button.Link>,
-    ],
   });
 });
 
