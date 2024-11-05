@@ -444,7 +444,6 @@ app.frame('/classes/:classId?', async c => {
 
   if (!classId) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -460,7 +459,6 @@ app.frame('/classes/:classId?', async c => {
 
   if (!classEntity) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -485,8 +483,56 @@ app.frame('/classes/:classId?', async c => {
   const nextClassIndex =
     currentClassIndex + 1 >= sortedClassIds.length ? 0 : currentClassIndex + 1;
 
+  const classObjectUrl = encodeURIComponent(
+    JSON.stringify({
+      claimable: classEntity.claimable,
+      classId: classEntity.classId,
+      description: classEntity.description,
+      image: classEntity.image,
+      name: classEntity.name,
+      numberOfHolders: classEntity.holders.length.toString(),
+    }),
+  );
+
   return c.res({
-    title: 'CharacterSheets Gallery',
+    image: `/classImg/:${classObjectUrl}`,
+    intents: [
+      <Button action={`/classes/${sortedClassIds[nextClassIndex]}`}>
+        Next
+      </Button>,
+      <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/classes/${classEntity.id}`}
+      >
+        Share
+      </Button.Link>,
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
+      >
+        App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.image('/classImg/:classObjectUrl?', async c => {
+  const classObjectUrl = c.req.param('classObjectUrl') ?? '';
+  const classEntity = JSON.parse(classObjectUrl.slice(1));
+
+  const imageText = await fetch(classEntity.image).then(res => res.text());
+  const isSvg = imageText.startsWith('<svg');
+
+  if (isSvg) {
+    const svgBuffer = Buffer.from(imageText);
+    const svgBase64 = svgBuffer.toString('base64');
+
+    classEntity.image = `data:image/svg+xml;base64,${svgBase64}`;
+  }
+
+  return c.res({
+    headers: {
+      'cache-control': 'max-age=0',
+    },
     image: (
       <Box
         backgroundColor="dark"
@@ -515,8 +561,8 @@ app.frame('/classes/:classId?', async c => {
                 <Column width="1/2">
                   <Stat
                     heading="HELD BY"
-                    value={`${classEntity.holders.length} character${
-                      classEntity.holders.length !== 1 ? 's' : ''
+                    value={`${classEntity.numberOfHolders} character${
+                      classEntity.numberOfHolders !== 1 ? 's' : ''
                     }`}
                   />
                 </Column>
@@ -542,22 +588,6 @@ app.frame('/classes/:classId?', async c => {
         </Box>
       </Box>
     ),
-    intents: [
-      <Button action={`/classes/${sortedClassIds[nextClassIndex]}`}>
-        Next
-      </Button>,
-      <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
-      <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/classes/${classEntity.id}`}
-      >
-        Share
-      </Button.Link>,
-      <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
-      >
-        App
-      </Button.Link>,
-    ],
   });
 });
 
@@ -566,7 +596,6 @@ app.frame('/items/:itemId?', async c => {
 
   if (!itemId) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -582,7 +611,6 @@ app.frame('/items/:itemId?', async c => {
 
   if (!item) {
     return c.res({
-      title: 'CharacterSheets Gallery',
       image: (
         <Background>
           <Text align="center" color="white" weight="300">
@@ -603,8 +631,56 @@ app.frame('/items/:itemId?', async c => {
   const nextItemIndex =
     currentItemIndex + 1 >= sortedItemIds.length ? 0 : currentItemIndex + 1;
 
+  const itemObjectUrl = encodeURIComponent(
+    JSON.stringify({
+      craftable: item.craftable,
+      description: item.description,
+      image: item.image,
+      name: item.name,
+      numberOfEquippers: item.equippers.length.toString(),
+      numberOfHolders: item.holders.length.toString(),
+      supply: item.supply,
+      totalSupply: item.totalSupply,
+    }),
+  );
+
   return c.res({
-    title: 'CharacterSheets Gallery',
+    image: `/itemImg/:${itemObjectUrl}`,
+    intents: [
+      <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
+      <Button action={`/games/${item.gameId}`}>Return</Button>,
+      <Button.Link
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/items/${item.id}`}
+      >
+        Share
+      </Button.Link>,
+      <Button.Link
+        href={`https://charactersheets.io/games/gnosis/${item.gameId}`}
+      >
+        App
+      </Button.Link>,
+    ],
+  });
+});
+
+app.image('/itemImg/:itemObjectUrl?', async c => {
+  const itemObjectUrl = c.req.param('itemObjectUrl') ?? '';
+  const item = JSON.parse(itemObjectUrl.slice(1));
+
+  const imageText = await fetch(item.image).then(res => res.text());
+  const isSvg = imageText.startsWith('<svg');
+
+  if (isSvg) {
+    const svgBuffer = Buffer.from(imageText);
+    const svgBase64 = svgBuffer.toString('base64');
+
+    item.image = `data:image/svg+xml;base64,${svgBase64}`;
+  }
+
+  return c.res({
+    headers: {
+      'cache-control': 'max-age=0',
+    },
     image: (
       <Box
         backgroundColor="dark"
@@ -632,8 +708,8 @@ app.frame('/items/:itemId?', async c => {
                 <Column width="1/2">
                   <Stat
                     heading="HELD BY"
-                    value={`${item.holders.length} character${
-                      item.holders.length !== 1 ? 's' : ''
+                    value={`${item.numberOfHolders} character${
+                      item.numberOfHolders !== 1 ? 's' : ''
                     }`}
                   />
                 </Column>
@@ -658,8 +734,8 @@ app.frame('/items/:itemId?', async c => {
                 <Column width="1/2">
                   <Stat
                     heading="EQUIPPED BY"
-                    value={`${item.equippers.length} character${
-                      item.equippers.length !== 1 ? 's' : ''
+                    value={`${item.numberOfEquippers} character${
+                      item.numberOfEquippers !== 1 ? 's' : ''
                     }`}
                   />
                 </Column>
@@ -678,20 +754,6 @@ app.frame('/items/:itemId?', async c => {
         </Box>
       </Box>
     ),
-    intents: [
-      <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
-      <Button action={`/games/${item.gameId}`}>Return</Button>,
-      <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/items/${item.id}`}
-      >
-        Share
-      </Button.Link>,
-      <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${item.gameId}`}
-      >
-        App
-      </Button.Link>,
-    ],
   });
 });
 
