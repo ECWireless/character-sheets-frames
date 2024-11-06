@@ -1,10 +1,9 @@
 import { Button, Frog, TextInput } from 'frog';
 import { devtools } from 'frog/dev';
 import { JSX } from 'frog/jsx/jsx-runtime';
-// import { pinata } from 'frog/hubs';
 import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
-// import { PinataFDK } from 'pinata-fdk';
+import { PinataFDK } from 'pinata-fdk';
 import { hexToNumber, keccak256, toBytes } from 'viem';
 
 import { getCharacterById } from '../graphql/characters.js';
@@ -13,10 +12,7 @@ import { getGameMetaForChainId } from '../graphql/games.js';
 import { getItemById } from '../graphql/items.js';
 import { SUPPORTED_CHAINS } from '../lib/web3/constants.js';
 import { getChainLabelFromId } from '../lib/web3/helpers.js';
-import {
-  // PINATA_JWT,
-  SECRET,
-} from '../utils/constants.js';
+import { PINATA_JWT, SECRET } from '../utils/constants.js';
 import { HeldClass } from '../utils/types.js';
 import {
   Box,
@@ -37,10 +33,10 @@ import {
 //   runtime: 'edge',
 // }
 
-// const fdk = new PinataFDK({
-//   pinata_jwt: PINATA_JWT,
-//   pinata_gateway: '',
-// });
+const fdk = new PinataFDK({
+  pinata_jwt: PINATA_JWT,
+  pinata_gateway: '',
+});
 
 export const app = new Frog({
   assetsPath: '/',
@@ -50,14 +46,13 @@ export const app = new Frog({
   browserLocation: 'https://charactersheets.io',
   secret: SECRET,
   verify: 'silent',
-  // hub: pinata(),
 });
 
-// app.use(
-//   '/',
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   fdk.analyticsMiddleware({ frameId: 'character-sheets-game-gallery' }) as any,
-// );
+app.use(
+  '/',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fdk.analyticsMiddleware({ frameId: 'character-sheets-game-gallery' }) as any,
+);
 
 app.frame('/', c => {
   const intents = SUPPORTED_CHAINS.map(chain => (
