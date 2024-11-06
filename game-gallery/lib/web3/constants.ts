@@ -1,12 +1,15 @@
-import { base, gnosis, optimism, polygon, sepolia } from 'viem/chains';
+import { base, gnosis, optimism, polygon } from 'viem/chains';
 
-import { ENVIRONMENT } from '../../utils/constants.js';
+export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
+  [base.id]: 'base',
+  [gnosis.id]: 'gnosis',
+  [optimism.id]: 'optimism',
+  [polygon.id]: 'polygon',
+};
 
 export const SUBGRAPH_URLS: { [key: number]: string } = {
   [gnosis.id]:
     'https://api.studio.thegraph.com/query/71457/character-sheets-gnosis/version/latest',
-  [sepolia.id]:
-    'https://api.studio.thegraph.com/query/71457/character-sheets-sepolia/version/latest',
   [base.id]:
     'https://api.studio.thegraph.com/query/71457/character-sheets-base/version/latest',
   [polygon.id]:
@@ -15,17 +18,7 @@ export const SUBGRAPH_URLS: { [key: number]: string } = {
     'https://api.studio.thegraph.com/query/71457/character-sheets-optimism/version/latest',
 };
 
-const ALL_SUPPORTED_CHAINS = [gnosis, sepolia, polygon, optimism, base];
-
-export const SUPPORTED_CHAINS = (() => {
-  switch (ENVIRONMENT) {
-    case 'main':
-      return ALL_SUPPORTED_CHAINS.filter(chain => !!chain.testnet === false);
-    case 'dev':
-    default:
-      return ALL_SUPPORTED_CHAINS.filter(chain => chain.testnet === true);
-  }
-})();
+export const SUPPORTED_CHAINS = [gnosis, polygon, optimism, base];
 
 const validateConfig = () => {
   SUPPORTED_CHAINS.forEach(chain => {
