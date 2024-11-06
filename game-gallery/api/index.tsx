@@ -6,13 +6,17 @@ import { serveStatic } from 'frog/serve-static';
 import { handle } from 'frog/vercel';
 // import { PinataFDK } from 'pinata-fdk';
 import { hexToNumber, keccak256, toBytes } from 'viem';
-import { gnosis } from 'viem/chains';
 
 import { getCharacterById } from '../graphql/characters.js';
 import { getClassById } from '../graphql/classes.js';
 import { getGameMetaForChainId } from '../graphql/games.js';
 import { getItemById } from '../graphql/items.js';
-// import { PINATA_JWT } from '../utils/constants.js';
+import { SUPPORTED_CHAINS } from '../lib/web3/constants.js';
+import { getChainLabelFromId } from '../lib/web3/helpers.js';
+import {
+  // PINATA_JWT,
+  SECRET,
+} from '../utils/constants.js';
 import { HeldClass } from '../utils/types.js';
 import {
   Box,
@@ -44,7 +48,7 @@ export const app = new Frog({
   title: 'CharacterSheets Gallery',
   ui: { vars },
   browserLocation: 'https://charactersheets.io',
-  secret: process.env.SECRET,
+  secret: SECRET,
   verify: 'silent',
   // hub: pinata(),
 });
@@ -56,10 +60,67 @@ export const app = new Frog({
 // );
 
 app.frame('/', c => {
+  const intents = SUPPORTED_CHAINS.map(chain => (
+    <Button action={`/chains/${chain.id}`}>{chain.name}</Button>
+  ));
+
   return c.res({
     image: (
       <Background>
-        <VStack alignHorizontal="center" gap="24" paddingTop="24">
+        <VStack alignHorizontal="center" gap="30" paddingTop="24">
+          <Heading color="white" weight="400">
+            Welcome to CharacterSheets!
+          </Heading>
+          <Box height="34" marginBottom="8" marginTop="4" width="34">
+            <Image height="48" src="/swords.png" width="52" />
+          </Box>
+          <VStack alignHorizontal="center">
+            <Text color="white" weight="300">
+              Pick a chain to view from
+            </Text>
+          </VStack>
+        </VStack>
+      </Background>
+    ),
+    intents,
+  });
+});
+
+app.frame('/chains/:chainId', c => {
+  const chainId = c.req.param('chainId') ?? '';
+
+  if (!chainId) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            No chain ID provided.
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  const chain = SUPPORTED_CHAINS.find(chain => chain.id === Number(chainId));
+
+  if (!chain) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            Chain not supported
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
+
+  return c.res({
+    image: (
+      <Background>
+        <VStack alignHorizontal="center" gap="30" paddingTop="24">
           <Heading color="white" weight="400">
             Welcome to CharacterSheets!
           </Heading>
@@ -71,7 +132,7 @@ app.frame('/', c => {
               Enter a game ID or address to
             </Text>
             <Text color="white" weight="300">
-              view game on Gnosis chain.
+              view game on {chain.name} chain.
             </Text>
           </VStack>
         </VStack>
@@ -79,13 +140,30 @@ app.frame('/', c => {
     ),
     intents: [
       <TextInput placeholder="Game ID/address..." />,
-      <Button action={`/games`}>View Game</Button>,
+      <Button action={`/chains/${chain.id}/games`}>View Game</Button>,
+      <Button action="/">Return</Button>,
     ],
   });
 });
 
-app.frame('/games/:gameId?', async c => {
+app.frame('/chains/:chainId/games/:gameId?', async c => {
+  const chainId = c.req.param('chainId') ?? '';
   const gameId = c.req.param('gameId') ?? c.inputText ?? '';
+
+  const chain = SUPPORTED_CHAINS.find(chain => chain.id === Number(chainId));
+
+  if (!chain) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            Chain not supported
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
 
   if (!gameId) {
     return c.res({
@@ -100,7 +178,7 @@ app.frame('/games/:gameId?', async c => {
     });
   }
 
-  const game = await getGameMetaForChainId(gnosis.id, gameId);
+  const game = await getGameMetaForChainId(chain.id, gameId);
 
   if (!game) {
     return c.res({
@@ -129,19 +207,27 @@ app.frame('/games/:gameId?', async c => {
   return c.res({
     image: `/gameImg/:${gameObjectUrl}`,
     intents: [
-      <Button action={`/characters/${game.characters[0]?.id}`}>
+      <Button
+        action={`/chains/${chain.id}/characters/${game.characters[0]?.id}`}
+      >
         Characters
       </Button>,
-      <Button action={`/classes/${game.classes[0]?.id}`}>Classes</Button>,
-      <Button action={`/items/${game.items[0]?.id}`}>Items</Button>,
-      <Button.Link href={`https://charactersheets.io/games/gnosis/${game.id}`}>
+      <Button action={`/chains/${chain.id}/classes/${game.classes[0]?.id}`}>
+        Classes
+      </Button>,
+      <Button action={`/chains/${chain.id}/items/${game.items[0]?.id}`}>
+        Items
+      </Button>,
+      <Button.Link
+        href={`https://charactersheets.io/games/${getChainLabelFromId(chain.id)}/${game.id}`}
+      >
         App
       </Button.Link>,
     ],
   });
 });
 
-app.image('/gameImg/:gameObjectUrl?', async c => {
+app.image('/gameImg/:gameObjectUrl', async c => {
   const gameObjectUrl = c.req.param('gameObjectUrl') ?? '';
   const game = JSON.parse(gameObjectUrl.slice(1));
 
@@ -178,9 +264,9 @@ app.image('/gameImg/:gameObjectUrl?', async c => {
             <HStack alignVertical="bottom" gap="20">
               <img src={game.image} alt={game.name} width={160} />
               <VStack gap="8">
-                <Heading color="white" weight="400">
+                <Text color="white" size="24" weight="900" wrap="balance">
                   {game.name}
-                </Heading>
+                </Text>
                 <Text color="white" weight="300" wrap="balance">
                   {game.description}
                 </Text>
@@ -212,9 +298,9 @@ app.image('/gameImg/:gameObjectUrl?', async c => {
                       borderBottom="4px solid"
                       borderTop="4px solid"
                       borderColor="xpBorder"
-                      padding="12"
+                      padding="8"
                     >
-                      <HStack gap="12">
+                      <HStack gap="20">
                         <Text color="softyellow" weight="700">
                           {game.experience}
                         </Text>
@@ -255,8 +341,24 @@ app.image('/gameImg/:gameObjectUrl?', async c => {
   });
 });
 
-app.frame('/characters/:characterId?', async c => {
+app.frame('/chains/:chainId/characters/:characterId', async c => {
+  const chainId = c.req.param('chainId') ?? '';
   const characterId = c.req.param('characterId') ?? '';
+
+  const chain = SUPPORTED_CHAINS.find(chain => chain.id === Number(chainId));
+
+  if (!chain) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            Chain not supported
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
 
   if (!characterId) {
     return c.res({
@@ -271,7 +373,7 @@ app.frame('/characters/:characterId?', async c => {
     });
   }
 
-  const { character } = await getCharacterById(gnosis.id, characterId);
+  const { character } = await getCharacterById(chain.id, characterId);
 
   if (!character) {
     return c.res({
@@ -317,17 +419,21 @@ app.frame('/characters/:characterId?', async c => {
   return c.res({
     image: `/characterImg/:${characterObjectUrl}`,
     intents: [
-      <Button action={`/characters/${sortedCharacterIds[nextCharacterIndex]}`}>
+      <Button
+        action={`/chains/${chain.id}/characters/${sortedCharacterIds[nextCharacterIndex]}`}
+      >
         Next
       </Button>,
-      <Button action={`/games/${character.gameId}`}>Return</Button>,
+      <Button action={`/chains/${chain.id}/games/${character.gameId}`}>
+        Return
+      </Button>,
       <Button.Link
         href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/characters/${character.id}`}
       >
         Share
       </Button.Link>,
       <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${character.gameId}`}
+        href={`https://charactersheets.io/games/${getChainLabelFromId(chain.id)}/${character.gameId}`}
       >
         App
       </Button.Link>,
@@ -335,7 +441,7 @@ app.frame('/characters/:characterId?', async c => {
   });
 });
 
-app.image('/characterImg/:characterObjectUrl?', async c => {
+app.image('/characterImg/:characterObjectUrl', async c => {
   const characterObjectUrl = c.req.param('characterObjectUrl') ?? '';
   const character = JSON.parse(characterObjectUrl.slice(1));
 
@@ -439,8 +545,24 @@ app.image('/characterImg/:characterObjectUrl?', async c => {
   });
 });
 
-app.frame('/classes/:classId?', async c => {
+app.frame('/chains/:chainId/classes/:classId', async c => {
+  const chainId = c.req.param('chainId') ?? '';
   const classId = c.req.param('classId') ?? '';
+
+  const chain = SUPPORTED_CHAINS.find(chain => chain.id === Number(chainId));
+
+  if (!chain) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            Chain not supported
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
 
   if (!classId) {
     return c.res({
@@ -455,7 +577,7 @@ app.frame('/classes/:classId?', async c => {
     });
   }
 
-  const { classEntity } = await getClassById(gnosis.id, classId);
+  const { classEntity } = await getClassById(chain.id, classId);
 
   if (!classEntity) {
     return c.res({
@@ -497,17 +619,21 @@ app.frame('/classes/:classId?', async c => {
   return c.res({
     image: `/classImg/:${classObjectUrl}`,
     intents: [
-      <Button action={`/classes/${sortedClassIds[nextClassIndex]}`}>
+      <Button
+        action={`/chains/${chain.id}/classes/${sortedClassIds[nextClassIndex]}`}
+      >
         Next
       </Button>,
-      <Button action={`/games/${classEntity.gameId}`}>Return</Button>,
+      <Button action={`/chains/${chain.id}/games/${classEntity.gameId}`}>
+        Return
+      </Button>,
       <Button.Link
         href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/classes/${classEntity.id}`}
       >
         Share
       </Button.Link>,
       <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${classEntity.gameId}`}
+        href={`https://charactersheets.io/games/${getChainLabelFromId(chain.id)}/${classEntity.gameId}`}
       >
         App
       </Button.Link>,
@@ -515,7 +641,7 @@ app.frame('/classes/:classId?', async c => {
   });
 });
 
-app.image('/classImg/:classObjectUrl?', async c => {
+app.image('/classImg/:classObjectUrl', async c => {
   const classObjectUrl = c.req.param('classObjectUrl') ?? '';
   const classEntity = JSON.parse(classObjectUrl.slice(1));
 
@@ -591,8 +717,24 @@ app.image('/classImg/:classObjectUrl?', async c => {
   });
 });
 
-app.frame('/items/:itemId?', async c => {
+app.frame('/chains/:chainId/items/:itemId', async c => {
+  const chainId = c.req.param('chainId') ?? '';
   const itemId = c.req.param('itemId') ?? '';
+
+  const chain = SUPPORTED_CHAINS.find(chain => chain.id === Number(chainId));
+
+  if (!chain) {
+    return c.res({
+      image: (
+        <Background>
+          <Text align="center" color="white" weight="300">
+            Chain not supported
+          </Text>
+        </Background>
+      ),
+      intents: [<Button action="/">Return</Button>],
+    });
+  }
 
   if (!itemId) {
     return c.res({
@@ -607,7 +749,7 @@ app.frame('/items/:itemId?', async c => {
     });
   }
 
-  const { item } = await getItemById(gnosis.id, itemId);
+  const { item } = await getItemById(chain.id, itemId);
 
   if (!item) {
     return c.res({
@@ -647,15 +789,21 @@ app.frame('/items/:itemId?', async c => {
   return c.res({
     image: `/itemImg/:${itemObjectUrl}`,
     intents: [
-      <Button action={`/items/${sortedItemIds[nextItemIndex]}`}>Next</Button>,
-      <Button action={`/games/${item.gameId}`}>Return</Button>,
+      <Button
+        action={`/chains/${chain.id}/items/${sortedItemIds[nextItemIndex]}`}
+      >
+        Next
+      </Button>,
+      <Button action={`/chains/${chain.id}/games/${item.gameId}`}>
+        Return
+      </Button>,
       <Button.Link
         href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/items/${item.id}`}
       >
         Share
       </Button.Link>,
       <Button.Link
-        href={`https://charactersheets.io/games/gnosis/${item.gameId}`}
+        href={`https://charactersheets.io/games/${getChainLabelFromId(chain.id)}/${item.gameId}`}
       >
         App
       </Button.Link>,
@@ -663,7 +811,7 @@ app.frame('/items/:itemId?', async c => {
   });
 });
 
-app.image('/itemImg/:itemObjectUrl?', async c => {
+app.image('/itemImg/:itemObjectUrl', async c => {
   const itemObjectUrl = c.req.param('itemObjectUrl') ?? '';
   const item = JSON.parse(itemObjectUrl.slice(1));
 
