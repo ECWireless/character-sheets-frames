@@ -423,7 +423,7 @@ app.frame('/chains/:chainId/characters/:characterId', async c => {
         Return
       </Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/characters/${character.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/chains/${chain.id}/characters/${character.id}`}
       >
         Share
       </Button.Link>,
@@ -623,7 +623,7 @@ app.frame('/chains/:chainId/classes/:classId', async c => {
         Return
       </Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/classes/${classEntity.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/chains/${chain.id}/classes/${classEntity.id}`}
       >
         Share
       </Button.Link>,
@@ -793,7 +793,7 @@ app.frame('/chains/:chainId/items/:itemId', async c => {
         Return
       </Button>,
       <Button.Link
-        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/items/${item.id}`}
+        href={`https://warpcast.com/~/compose?text=CharacterSheets%20by%20%40raidguild&embeds[]=https://frames.charactersheets.io/api/game-gallery/chains/${chain.id}/items/${item.id}`}
       >
         Share
       </Button.Link>,
